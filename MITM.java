@@ -2,11 +2,11 @@
 /*****************************************************
    CS 326 - Spring 2026 - Assignment #3
 
-   Student's full name: _____
-   Student's full name: _____
-   Student's full name: _____
+   Student's full name: Caleb Wisneski
+   Student's full name: Ethan Trammell
+   Student's full name: Gretchen Rost
 
-*****************************************************/
+ *****************************************************/
 
 import java.util.*;
 

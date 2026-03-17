@@ -2,11 +2,11 @@
 /*****************************************************
    CS 326 - Spring 2026 - Assignment #3
 
-   Student's full name: _____
-   Student's full name: _____
-   Student's full name: _____
+   Student's full name: Caleb Wisneski
+   Student's full name: Ethan Trammell
+   Student's full name: Gretchen Rost
 
-*****************************************************/
+ *****************************************************/
 
 import java.util.*;
 
@@ -145,7 +145,8 @@ class ImageCipher {
         try
         {
             Scanner s = new Scanner(new File(filename + EXT));
-            PrintWriter w = new PrintWriter(new FileWriter(filename + "EncryptedECB" + EXT));
+            PrintWriter w = new PrintWriter(new FileWriter(filename + 
+                "EncryptedECB" + EXT));
  
             processHeader(s, w);
  
@@ -153,9 +154,9 @@ class ImageCipher {
  
             while (s.hasNextInt())
             {
-                readBlock(s);                        // fills 'block' with 64 plaintext bits
+                readBlock(s);            // fills 'block' with 64 plaintext bits
                 int[] cipher = des.encryptDES(block);
-                copy64(cipher, block);               // move result into 'block' for writeBlock
+                copy64(cipher, block);// move result into 'block' for writeBlock
                 writeBlock(w);
             }
  
@@ -179,7 +180,8 @@ class ImageCipher {
         try
         {
             Scanner s = new Scanner(new File(filename + EXT));
-            PrintWriter w = new PrintWriter(new FileWriter(filename + "DecryptedECB" + EXT));
+            PrintWriter w = new PrintWriter(new FileWriter(filename + 
+                "DecryptedECB" + EXT));
  
             processHeader(s, w);
  
@@ -187,7 +189,7 @@ class ImageCipher {
  
             while (s.hasNextInt())
             {
-                readBlock(s);                        // fills 'block' with 64 ciphertext bits
+                readBlock(s);           // fills 'block' with 64 ciphertext bits
                 int[] plain = des.decryptDES(block);
                 copy64(plain, block);
                 writeBlock(w);
@@ -222,7 +224,8 @@ class ImageCipher {
         try
         {
             Scanner s = new Scanner(new File(filename + EXT));
-            PrintWriter w = new PrintWriter(new FileWriter(filename + "EncryptedCBC" + EXT));
+            PrintWriter w = new PrintWriter(new FileWriter(filename + 
+                "EncryptedCBC" + EXT));
  
             processHeader(s, w);
  
@@ -235,10 +238,10 @@ class ImageCipher {
             {
                 readBlock(s);                        // 'block' = P[i]
  
-                int[] xored  = xor64(block, previousBlock);    // P[i] XOR C[i-1]
+                int[] xored  = xor64(block, previousBlock);   // P[i] XOR C[i-1]
                 int[] cipher = des.encryptDES(xored);           // C[i]
  
-                copy64(cipher, block);               // put C[i] into 'block' for writing
+                copy64(cipher, block);      // put C[i] into 'block' for writing
                 writeBlock(w);
  
                 // C[i] becomes the previous block for the next iteration
@@ -270,7 +273,8 @@ class ImageCipher {
         try
         {
             Scanner s = new Scanner(new File(filename + EXT));
-            PrintWriter w = new PrintWriter(new FileWriter(filename + "DecryptedCBC" + EXT));
+            PrintWriter w = new PrintWriter(new FileWriter(filename + 
+                "DecryptedCBC" + EXT));
  
             processHeader(s, w);
  
@@ -284,13 +288,13 @@ class ImageCipher {
                 readBlock(s);                        // 'block' = C[i]
  
                 // Save C[i] BEFORE anything else — needed as previousBlock
-                // on the next iteration, and decryptDES does not modify block[].
+                //on the next iteration, and decryptDES does not modify block[].
                 int[] savedCipher = clone64(block);
  
-                int[] decrypted = des.decryptDES(block);         // DES_D( C[i] )
+                int[] decrypted = des.decryptDES(block);        // DES_D( C[i] )
                 int[] plain     = xor64(decrypted, previousBlock); // P[i]
  
-                copy64(plain, block);                // put P[i] into 'block' for writing
+                copy64(plain, block);       // put P[i] into 'block' for writing
                 writeBlock(w);
  
                 // C[i] becomes the previous block for the next iteration

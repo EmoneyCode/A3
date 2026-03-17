@@ -1,10 +1,10 @@
 /*****************************************************
- * CS 326 - Spring 2026 - Assignment #3
- * 
- * Student's full name: _____
- * Student's full name: _____
- * Student's full name: _____
- * 
+   CS 326 - Spring 2026 - Assignment #3
+
+   Student's full name: Caleb Wisneski
+   Student's full name: Ethan Trammell
+   Student's full name: Gretchen Rost
+
  *****************************************************/
 
 class BruteForce {
@@ -52,7 +52,8 @@ class BruteForce {
                 int[] testC1 = cipher.encrypt(p1);
                 int[] testC2 = cipher.encrypt(p2);
 
-                if (Utils.getHex(testC1).equals(ciphertext1) && Utils.getHex(testC2).equals(ciphertext2)) {
+                if (Utils.getHex(testC1).equals(ciphertext1) && 
+                    Utils.getHex(testC2).equals(ciphertext2)) {
                     elapsedTime = System.currentTimeMillis() - startTime;
 
                     System.out.printf("            %s %s  time = %.3fs\n",
