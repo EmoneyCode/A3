@@ -1,11 +1,11 @@
 /*****************************************************
    CS 326 - Spring 2026 - Assignment #3
 
-   Student's full name: _____
-   Student's full name: _____
-   Student's full name: _____
+   Student's full name: Caleb Wisneski
+   Student's full name: Ethan Trammell
+   Student's full name: Gretchen Rost
 
-*****************************************************/
+ *****************************************************/
 
 class DoubleDES
 {
@@ -27,7 +27,7 @@ class DoubleDES
     */
     int[] encrypt(int[] block)
     {
-        return des2.encryptDES(des1.encryptDES(block)); // only here to please the compiler                
+        return des2.encryptDES(des1.encryptDES(block));              
     }// encrypt method
 
     /* given a 64-bit ciphertext block, return the plaintext block
@@ -35,7 +35,7 @@ class DoubleDES
     */
     int[] decrypt(int[] block)
     {   
-        return des1.decryptDES(des2.decryptDES(block)); // only here to please the compiler                
+        return des1.decryptDES(des2.decryptDES(block));              
     }// decrypt method
 
     /* This method is used for testing. Do NOT modify. */
