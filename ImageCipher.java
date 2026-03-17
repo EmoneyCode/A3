@@ -35,276 +35,273 @@ class ImageCipher {
      * the 8 corresponding 8-bit patterns into the 64-bit instance variable
      * called 'block'
      */
-    static void readBlock(Scanner s) throws Exception {
-        for (int i = 0; i < 8; i++) {
-            int pixelVal = s.nextInt(); // read one pixel value (0–255)
-
-            // store the 8 bits of this byte into block[i*8 .. i*8+7]
-            // MSB first
-            for (int bit = 7; bit >= 0; bit--) {
-                block[i * 8 + (7 - bit)] = (pixelVal >> bit) & 1;
+    static void readBlock(Scanner s) throws Exception
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            int pixelVal = s.nextInt();          // one pixel: 0-255
+ 
+            // unpack 8 bits, MSB first
+            for (int b = 7; b >= 0; b--)
+            {
+                block[i * 8 + (7 - b)] = (pixelVal >> b) & 1;
             }
         }
     }// readBlock method
-
-    /*
-     * Given a PrintWriter object, write to it the 8 integers stored as the 8
-     * corresponding 8-bit patterns in the 64-bit instance variable
-     * called 'block'
+ 
+    /* Given a PrintWriter object, write to it the 8 integers stored as the 8
+       corresponding 8-bit patterns in the 64-bit instance variable
+       called 'block'.
+ 
+       We reassemble each 8-bit group back into an integer and print it
+       as a decimal followed by a space (the PGM format is whitespace-
+       separated, so a trailing space on each block is fine).
      */
-    static void writeBlock(PrintWriter w) throws Exception {
-        for (int i = 0; i < 8; i++) {
-            // reconstruct the byte from 8 bits (MSB first)
+    static void writeBlock(PrintWriter w) throws Exception
+    {
+        for (int i = 0; i < 8; i++)
+        {
             int pixelVal = 0;
-            for (int bit = 7; bit >= 0; bit--) {
-                pixelVal |= (block[i * 8 + (7 - bit)] << bit);
+ 
+            // pack 8 bits back into an integer (MSB first)
+            for (int b = 7; b >= 0; b--)
+            {
+                pixelVal |= (block[i * 8 + (7 - b)] << b);
             }
-
-            // treat as unsigned: Java bytes are signed, but pixel values
-            // must be 0–255, so mask to ensure no negatives
+ 
+            // mask to unsigned byte: handles any sign issues after DES
             pixelVal = pixelVal & 0xFF;
-
+ 
             w.print(pixelVal + " ");
         }
     }// writeBlock method
-
-    /*
-     * Given a Scanner object and a PrintWriter object, copy to the latter
-     * the first four lines of the former.
+ 
+    /* Given a Scanner object and a PrintWriter object, copy to the latter
+       the first four lines of the former.
+ 
+       We temporarily switch the Scanner to line-delimited mode so that
+       next() grabs whole lines, then reset to the default whitespace
+       delimiter for pixel-by-pixel reading afterwards.
      */
-    static void processHeader(Scanner s, PrintWriter w) throws Exception {
-        // useDelimiter("\n") so we can read full lines
+    static void processHeader(Scanner s, PrintWriter w) throws Exception
+    {
         s.useDelimiter("\n");
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++)
+        {
             String line = s.next();
             w.println(line);
         }
-        // reset delimiter to default whitespace for pixel-by-pixel reading
+        // back to whitespace splitting for integer pixel values
         s.useDelimiter("\\s+");
     }// processHeader method
-
-    /*
-     * ---------------------------------------------------------------
-     * Helper: convert a hex string (16 hex chars = 8 bytes) to a byte[].
-     */
-    static byte[] hexToBytes(String hex) {
-        int len = hex.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
-                    + Character.digit(hex.charAt(i + 1), 16));
-        }
-        return data;
+ 
+    // ---------------------------------------------------------------
+    // Private helpers
+    // ---------------------------------------------------------------
+ 
+    /* Build a DES object from a 16-hex-digit key string. */
+    private static DES buildDES(String keyHex)
+    {
+        return new DES(DES.getSubKeys(keyHex));
     }
-
-    /*
-     * ---------------------------------------------------------------
-     * Helper: convert a 64-element int[] of bits (MSB-first per byte)
-     * into an 8-byte array.
-     */
-    static byte[] bitsToBytes(int[] bits) {
-        byte[] result = new byte[8];
-        for (int i = 0; i < 8; i++) {
-            int val = 0;
-            for (int bit = 7; bit >= 0; bit--) {
-                val |= (bits[i * 8 + (7 - bit)] << bit);
-            }
-            result[i] = (byte) val;
-        }
-        return result;
+ 
+    /* Convert a 16-hex-digit IV string into a 64-element int[] bit vector.
+       Delegates to the course-provided Utils.getBitVectorFromHex(). */
+    private static int[] hexToBits(String hex)
+    {
+        return Utils.getBitVectorFromHex(hex);
     }
-
-    /*
-     * ---------------------------------------------------------------
-     * Helper: fill a 64-element int[] of bits (MSB-first per byte)
-     * from an 8-byte array. Fills either 'block' or 'cipherBlock'.
-     */
-    static void bytesToBits(byte[] bytes, int[] dest) {
-        for (int i = 0; i < 8; i++) {
-            int val = bytes[i] & 0xFF; // treat as unsigned
-            for (int bit = 7; bit >= 0; bit--) {
-                dest[i * 8 + (7 - bit)] = (val >> bit) & 1;
-            }
-        }
+ 
+    /* XOR two 64-bit arrays, returning a fresh array.
+       Delegates to the course-provided Utils.XOR(). */
+    private static int[] xor64(int[] a, int[] b)
+    {
+        return Utils.XOR(a, b);
     }
-
-    /*
-     * ---------------------------------------------------------------
-     * Helper: XOR two 64-bit (bit-array) blocks, result stored in dest.
-     */
-    static void xorBlocks(int[] a, int[] b, int[] dest) {
-        for (int i = 0; i < 64; i++) {
-            dest[i] = a[i] ^ b[i];
-        }
+ 
+    /* Copy src into dst (both length 64). */
+    private static void copy64(int[] src, int[] dst)
+    {
+        System.arraycopy(src, 0, dst, 0, 64);
     }
-
-    /*
-     * ---------------------------------------------------------------
-     * Helper: build a DES Cipher in ECB/NoPadding mode from a hex key.
-     */
-    static Cipher buildCipher(String keyHex, int mode) throws Exception {
-        byte[] keyBytes = hexToBytes(keyHex);
-        DESKeySpec dks = new DESKeySpec(keyBytes);
-        SecretKeyFactory skf = SecretKeyFactory.getInstance("DES");
-        SecretKey desKey = skf.generateSecret(dks);
-        // Use ECB/NoPadding so we control the chaining ourselves
-        Cipher cipher = Cipher.getInstance("DES/ECB/NoPadding");
-        cipher.init(mode, desKey);
-        return cipher;
+ 
+    /* Deep-copy a 64-element array into a new array. */
+    private static int[] clone64(int[] src)
+    {
+        return Arrays.copyOf(src, 64);
     }
-
-    /*
-     * given a file name (with no extension) for a PGM image and a DES
-     * key (in hex format), encrypt the image using DES in ECB mode and store
-     * the result in a file whose name is obtained by adding to the input
-     * file name the string "EncryptedECB" + EXT.
+ 
+    // ---------------------------------------------------------------
+    // ECB
+    // ---------------------------------------------------------------
+ 
+    /* given a file name (with no extension) for a PGM image and a DES
+       key (in hex format), encrypt the image using DES in ECB mode and store
+       the result in a file whose name is obtained by adding to the input
+       file name the string "EncryptedECB" + EXT.
      */
-    static void encryptECB(String filename, String key) {
-        try {
+    static void encryptECB(String filename, String key)
+    {
+        try
+        {
             Scanner s = new Scanner(new File(filename + EXT));
             PrintWriter w = new PrintWriter(new FileWriter(filename + "EncryptedECB" + EXT));
-
+ 
             processHeader(s, w);
-
-            Cipher cipher = buildCipher(key, Cipher.ENCRYPT_MODE);
-
-            while (s.hasNextInt()) {
-                readBlock(s); // fills 'block'
-                byte[] plainBytes = bitsToBytes(block);
-                byte[] cipherBytes = cipher.doFinal(plainBytes);
-                bytesToBits(cipherBytes, block); // reuse 'block' for output
+ 
+            DES des = buildDES(key);
+ 
+            while (s.hasNextInt())
+            {
+                readBlock(s);                        // fills 'block' with 64 plaintext bits
+                int[] cipher = des.encryptDES(block);
+                copy64(cipher, block);               // move result into 'block' for writeBlock
                 writeBlock(w);
             }
-
+ 
             s.close();
             w.close();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("encryptECB error: " + e.getMessage());
             e.printStackTrace();
         }
     }// encryptECB method
-
-    /*
-     * given a file name (with no extension) for a PGM image and a DES
-     * key (in hex format), decrypt the image using DES in ECB mode and store
-     * the result in a file whose name is obtained by adding to the input
-     * file name the string "DecryptedECB" + EXT.
+ 
+    /* given a file name (with no extension) for a PGM image and a DES
+       key (in hex format), decrypt the image using DES in ECB mode and store
+       the result in a file whose name is obtained by adding to the input
+       file name the string "DecryptedECB" + EXT.
      */
-    static void decryptECB(String filename, String key) {
-        try {
+    static void decryptECB(String filename, String key)
+    {
+        try
+        {
             Scanner s = new Scanner(new File(filename + EXT));
             PrintWriter w = new PrintWriter(new FileWriter(filename + "DecryptedECB" + EXT));
-
+ 
             processHeader(s, w);
-
-            Cipher cipher = buildCipher(key, Cipher.DECRYPT_MODE);
-
-            while (s.hasNextInt()) {
-                readBlock(s);
-                byte[] cipherBytes = bitsToBytes(block);
-                byte[] plainBytes = cipher.doFinal(cipherBytes);
-                bytesToBits(plainBytes, block);
+ 
+            DES des = buildDES(key);
+ 
+            while (s.hasNextInt())
+            {
+                readBlock(s);                        // fills 'block' with 64 ciphertext bits
+                int[] plain = des.decryptDES(block);
+                copy64(plain, block);
                 writeBlock(w);
             }
-
+ 
             s.close();
             w.close();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("decryptECB error: " + e.getMessage());
             e.printStackTrace();
         }
     }// decryptECB method
-
-    /*
-     * given a file name (with no extension) for a PGM image, a DES
-     * key and an initialization vector (both in hex format), encrypt
-     * the image using DES in CBC mode and store the result in a file
-     * whose name is obtained by adding to the input file name the
-     * string "EncryptedCBC" + EXT.
+ 
+    // ---------------------------------------------------------------
+    // CBC
+    // ---------------------------------------------------------------
+ 
+    /* given a file name (with no extension) for a PGM image, a DES
+       key and an initialization vector (both in hex format), encrypt
+       the image using DES in CBC mode and store the result in a file
+       whose name is obtained by adding to the input file name the
+       string "EncryptedCBC" + EXT.
+ 
+       CBC encryption:
+           C[0] = DES_E( P[0] XOR IV )
+           C[i] = DES_E( P[i] XOR C[i-1] )   for i >= 1
      */
-    static void encryptCBC(String filename, String key, String IV) {
-        try {
+    static void encryptCBC(String filename, String key, String IV)
+    {
+        try
+        {
             Scanner s = new Scanner(new File(filename + EXT));
             PrintWriter w = new PrintWriter(new FileWriter(filename + "EncryptedCBC" + EXT));
-
+ 
             processHeader(s, w);
-
-            Cipher cipher = buildCipher(key, Cipher.ENCRYPT_MODE);
-
-            // previousBlock starts as the IV (as a bit array)
-            int[] previousBlock = new int[64];
-            bytesToBits(hexToBytes(IV), previousBlock);
-
-            int[] xoredBlock = new int[64];
-
-            while (s.hasNextInt()) {
-                readBlock(s); // fills 'block' with plaintext
-
-                // CBC encrypt: ciphertext[i] = DES_encrypt(plaintext[i] XOR ciphertext[i-1])
-                xorBlocks(block, previousBlock, xoredBlock);
-
-                byte[] xoredBytes = bitsToBytes(xoredBlock);
-                byte[] cipherBytes = cipher.doFinal(xoredBytes);
-
-                bytesToBits(cipherBytes, block); // 'block' now holds ciphertext
+ 
+            DES des = buildDES(key);
+ 
+            // previousBlock is initialised to the IV bit-vector
+            int[] previousBlock = hexToBits(IV);    // 64 bits
+ 
+            while (s.hasNextInt())
+            {
+                readBlock(s);                        // 'block' = P[i]
+ 
+                int[] xored  = xor64(block, previousBlock);    // P[i] XOR C[i-1]
+                int[] cipher = des.encryptDES(xored);           // C[i]
+ 
+                copy64(cipher, block);               // put C[i] into 'block' for writing
                 writeBlock(w);
-
-                // the ciphertext block becomes the "previous" for next iteration
-                System.arraycopy(block, 0, previousBlock, 0, 64);
+ 
+                // C[i] becomes the previous block for the next iteration
+                previousBlock = clone64(cipher);
             }
-
+ 
             s.close();
             w.close();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("encryptCBC error: " + e.getMessage());
             e.printStackTrace();
         }
     }// encryptCBC method
-
-    /*
-     * given a file name (with no extension) for a PGM image, a DES
-     * key and an initialization vector (both in hex format), decrypt
-     * the image using DES in CBC mode and store the result in a file
-     * whose name is obtained by adding to the input file name the
-     * string "DecryptedCBC" + EXT.
+ 
+    /* given a file name (with no extension) for a PGM image, a DES
+       key and an initialization vector (both in hex format), decrypt
+       the image using DES in CBC mode and store the result in a file
+       whose name is obtained by adding to the input file name the
+       string "DecryptedCBC" + EXT.
+ 
+       CBC decryption:
+           P[0] = DES_D( C[0] ) XOR IV
+           P[i] = DES_D( C[i] ) XOR C[i-1]   for i >= 1
      */
-    static void decryptCBC(String filename, String key, String IV) {
-        try {
+    static void decryptCBC(String filename, String key, String IV)
+    {
+        try
+        {
             Scanner s = new Scanner(new File(filename + EXT));
             PrintWriter w = new PrintWriter(new FileWriter(filename + "DecryptedCBC" + EXT));
-
+ 
             processHeader(s, w);
-
-            Cipher cipher = buildCipher(key, Cipher.DECRYPT_MODE);
-
-            // previousBlock starts as the IV (as a bit array)
-            int[] previousBlock = new int[64];
-            bytesToBits(hexToBytes(IV), previousBlock);
-
-            int[] decryptedBlock = new int[64];
-
-            while (s.hasNextInt()) {
-                readBlock(s); // fills 'block' with ciphertext
-
-                // save ciphertext BEFORE overwriting block
-                int[] savedCipher = Arrays.copyOf(block, 64);
-
-                byte[] cipherBytes = bitsToBytes(block);
-                byte[] decryptedBytes = cipher.doFinal(cipherBytes);
-
-                // CBC decrypt: plaintext[i] = DES_decrypt(ciphertext[i]) XOR ciphertext[i-1]
-                bytesToBits(decryptedBytes, decryptedBlock);
-                xorBlocks(decryptedBlock, previousBlock, block); // result into 'block'
-
+ 
+            DES des = buildDES(key);
+ 
+            // previousBlock is initialised to the IV bit-vector
+            int[] previousBlock = hexToBits(IV);    // 64 bits
+ 
+            while (s.hasNextInt())
+            {
+                readBlock(s);                        // 'block' = C[i]
+ 
+                // Save C[i] BEFORE anything else — needed as previousBlock
+                // on the next iteration, and decryptDES does not modify block[].
+                int[] savedCipher = clone64(block);
+ 
+                int[] decrypted = des.decryptDES(block);         // DES_D( C[i] )
+                int[] plain     = xor64(decrypted, previousBlock); // P[i]
+ 
+                copy64(plain, block);                // put P[i] into 'block' for writing
                 writeBlock(w);
-
-                // the saved ciphertext becomes the "previous" for next iteration
-                System.arraycopy(savedCipher, 0, previousBlock, 0, 64);
+ 
+                // C[i] becomes the previous block for the next iteration
+                previousBlock = savedCipher;
             }
-
+ 
             s.close();
             w.close();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println("decryptCBC error: " + e.getMessage());
             e.printStackTrace();
         }
