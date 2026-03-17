@@ -18,9 +18,11 @@ class Utils {
     static String textToHex(String s) {
         String hexCode = "";
         for (int i = 0; i < s.length(); i++) {
-            hexCode = Integer.toHexString((int) s.charAt(i)).toUpperCase();
-            if (hexCode.length() == 1)
-                hexCode = "0" + hexCode;
+            String hex = Integer.toHexString((int) s.charAt(i)).toUpperCase();
+            if (hex.length() == 1) {
+                hex = "0" + hex;
+            }
+            hexCode += hex;
         }
         return hexCode;
 
@@ -80,17 +82,13 @@ class Utils {
      * 4 times the number of hexadecimal digits in the first argument.
      */
     static String hexToBinString(String s, int numBits) {
-        String binString = "";
-        for (int i = 0; i < s.length(); i++) {
-            String hexDigit = s.substring(i, i + 1);
-            int decimalValue = Integer.parseInt(hexDigit, 16);
-            String binaryString = Integer.toBinaryString(decimalValue);
-            while (binaryString.length() < 4) {
-                binaryString = "0" + binaryString;
-            }
-            binString += binaryString;
+        java.math.BigInteger num = new java.math.BigInteger(s, 16);
+        String binString = num.toString(2);
+
+        while (binString.length() < numBits) {
+            binString = "0" + binString;
         }
-        return binString.substring(0, numBits);
+        return binString;
     }// hexToBinString method
 
     /*

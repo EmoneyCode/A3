@@ -36,9 +36,7 @@ class FeistelAllOnes  extends FeistelFunction
     int[] round(int[] block, int[] key)
     {
         int[] result = new int[block.length];
-        for (int i = 0; i < block.length; i++) {
-            result[i] = 1;
-        }
+        java.util.Arrays.fill(result, 1);
         return result;
     }
 }// class FeistelAllOnes
