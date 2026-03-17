@@ -27,7 +27,7 @@ class DoubleDES
     */
     int[] encrypt(int[] block)
     {
-        return des2.encrypt(des1.encrypt(block)); // only here to please the compiler                
+        return des2.encryptDES(des1.encryptDES(block)); // only here to please the compiler                
     }// encrypt method
 
     /* given a 64-bit ciphertext block, return the plaintext block
@@ -35,7 +35,7 @@ class DoubleDES
     */
     int[] decrypt(int[] block)
     {   
-        return des1.decrypt(des2.decrypt(block)); // only here to please the compiler                
+        return des1.decryptDES(des2.decryptDES(block)); // only here to please the compiler                
     }// decrypt method
 
     /* This method is used for testing. Do NOT modify. */

@@ -66,7 +66,7 @@ class Avalanche extends Feistel {
                     System.out.print(" ");
                 }
             }
-            System.out.println(diff);
+            System.out.println(" " + diff);
 
             System.out.print("         ");
             printHexDigits(lb1);
@@ -125,7 +125,7 @@ class Avalanche extends Feistel {
                 System.out.print(" ");
             }
         }
-        System.out.println(diff);
+        System.out.println(" " + diff);
 
         System.out.print("         ");
         printHexDigits(lb1);
